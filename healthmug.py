@@ -64,7 +64,8 @@ class HealthMugScraper(object):
         options = webdriver.ChromeOptions()
         options.add_argument('--headless')
 
-        chrome = webdriver.Chrome(self.settings["driver_path"]["value"], chrome_options=options)
+        log_path = '/dev/null' if sys.platform == "linux" else "NUL"
+        chrome = webdriver.Chrome(self.settings["driver_path"]["value"], chrome_options=options, service_log_path=log_path)
         chrome.get(url_product)
         try:
             wait = self.settings["page_load_timeout"]["value"]
