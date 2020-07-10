@@ -41,6 +41,7 @@ class HealthMugScraper(object):
         self.dir_output = os.path.join(HealthMugScraper.dir_output, self.category)
         self.xl_output = os.path.join(self.dir_output,
                                       "{}_{}_{}.xlsx".format(self.category, self.page_from, self.page_to))
+        self.url_product_failed = []
         self.data = []
 
     def get_urls(self):
@@ -76,8 +77,9 @@ class HealthMugScraper(object):
             info["url[do-not-delete]"] = url_product
             return info
         except (TimeoutException, Exception) as err:
-            log.error("Error on loading the product info: {}".format(err))
-            exit(1)
+            log.error(f"Error on loading the product info: {url_product}")
+            log.error(f"Error Message: {err}")
+            self.url_product_failed.append(url_product)
         finally:
             chrome.close()
 
@@ -87,8 +89,9 @@ class HealthMugScraper(object):
         count, workers = 1, self.settings["workers"]["value"]
         with ThreadPoolExecutor(max_workers=workers) as executor:        
             for info in executor.map(self.get_info, url_products):
-                self.data.append(info)
-                if count % 5 == 0:
+                if info:
+                    self.data.append(info)
+                if count % 20 == 0:
                     log.info("So far {} has been fetched ...".format(count))
                 count += 1
 
@@ -96,6 +99,10 @@ class HealthMugScraper(object):
         df = pd.DataFrame(self.data)
         df.to_excel(self.xl_output, index=False)
         log.info("Fetched data has been stored in {} file".format(self.xl_output))
+        
+        with open("url_failed.txt", "a+") as f:
+            f.write("\n".join(self.url_product_failed))
+            log.info("Failed URLs has been updated in url_failed.txt")
 
     def setup(self):
         os.makedirs(self.dir_output, exist_ok=True)
