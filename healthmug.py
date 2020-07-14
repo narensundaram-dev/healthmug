@@ -3,6 +3,7 @@ import sys
 import math
 import time
 import json
+import glob
 import argparse
 import traceback
 from datetime import datetime as dt
@@ -125,6 +126,21 @@ def list_category():
         sno += 1
 
 
+def merge_xlsx():
+    dir_output = HealthMugScraper.dir_output
+    cwd = os.getcwd()
+    get_img_large = lambda images: images.split(",")[1]
+
+    dfs = []
+    for xlsx_file in glob.glob(pathname=f"{cwd}/{dir_output}/**/*.xlsx", recursive=True):
+        log.info(f"Processing {xlsx_file} ...")
+        df = pd.read_excel(xlsx_file, index=False)
+        df['images'] = df['images'].apply(get_img_large)
+        dfs.append(df)
+    df_final = pd.concat(dfs)
+    df_final.to_excel("healthmug.xlsx", index=False)
+    log.info("Final merged data is stored in healthmug.xlsx.")
+
 def get_settings():
     with open("settings.json", "r") as f:
         return json.load(f)
@@ -142,6 +158,7 @@ def get_args():
     arg_parser.add_argument('-c', "--category", type=str, choices=list(CATEGORIES.keys()), required=False)
     arg_parser.add_argument('-p1', "--page_from", type=int, required=False)
     arg_parser.add_argument('-p2', "--page_to", type=int, required=False)
+    arg_parser.add_argument('--merge-xlsx', dest="merge_xlsx", action="store_true")
     arg_parser.add_argument('-log-level', '--log_level', type=str, choices=(INFO, DEBUG), default=INFO)
     return arg_parser.parse_args()
 
@@ -155,6 +172,9 @@ def main():
 
     if args.list_category:
         list_category()
+    
+    elif args.merge_xlsx:
+        merge_xlsx()
 
     elif args.category:
         settings = get_settings()

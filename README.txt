@@ -23,6 +23,14 @@
         - Stored in excel: "<script-dir>/output/babycare/babycare_1_7.xlsx"
         - Filename format: <category-name>_<page_from>_<page_to>.xlsx
 
+|=============================|
+|To merge all the xlsx files: |
+|=============================|
+
+    - python3.6 healthmug.py --merge-xlsx
+    - Output:
+        - Stored in excel: "<script-dir>/healthmug.xlsx"
+
 |================|
 |To get help:    |
 |================|
